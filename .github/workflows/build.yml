@@ -49,8 +49,12 @@ jobs:
         run: flutter pub get
 
         # FIX: This dynamically updates the unsupported Gradle configurations on the runner
-      - name: Repair and Upgrade Gradle Configuration
-        run: flutter create . --overwrite
+      #- name: Repair and Upgrade Gradle Configuration
+        #run: flutter create . --overwrite
+
+      # Replaces the old overwrite repair step with a standard clean compilation step
+      - name: Clean Environment
+        run: flutter clean
 
       - name: Build APK
         run: flutter build apk --release
