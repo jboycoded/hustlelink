@@ -1,7 +1,7 @@
 name: Build Flutter APK
 
 on:
-  workflow_dispatch: # Keeps it purely manual via your Actions tab menu
+  workflow_dispatch:
 
 jobs:
   build:
@@ -17,45 +17,25 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      # The Android SDK is already pre-installed on this runner, 
-      # so we skip right to installing Flutter.
       - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.29.0'
           cache: true
 
-      # Cache pub packages to speed up builds
-      - name: Cache pub packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.pub-cache
-          key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
-          restore-keys: |
-            pub-${{ runner.os }}-
+      # Step 1: Force regenerate the native Android tooling files
+      - name: Repair Native Android Project structures
+        run: flutter create . --overwrite
 
-      # Cache Gradle build outputs to speed up builds
-      - name: Cache Gradle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*') }}
-          restore-keys: |
-            gradle-${{ runner.os }}-
+      # Step 2: Restore your custom main.dart/app.dart so they don't get replaced by the template
+      - name: Restore Custom Application Entrypoints
+        run: git checkout HEAD -- lib/main.dart lib/app.dart
 
+      # Step 3: Gather dependencies cleanly
       - name: Get dependencies
         run: flutter pub get
 
-        # FIX: This dynamically updates the unsupported Gradle configurations on the runner
-      #- name: Repair and Upgrade Gradle Configuration
-        #run: flutter create . --overwrite
-
-      # Replaces the old overwrite repair step with a standard clean compilation step
-      - name: Clean Environment
-        run: flutter clean
-
+      # Step 4: Run the clean compiler compilation
       - name: Build APK
         run: flutter build apk --release
 
