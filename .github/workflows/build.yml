@@ -23,19 +23,19 @@ jobs:
           flutter-version: '3.29.0'
           cache: true
 
-      # Step 1: Force regenerate the native Android tooling files
+      # Step 1: Fix the broken native Android Gradle configuration wrapper
       - name: Repair Native Android Project structures
         run: flutter create . --overwrite
 
-      # Step 2: Restore your custom main.dart/app.dart so they don't get replaced by the template
-      - name: Restore Custom Application Entrypoints
-        run: git checkout HEAD -- lib/main.dart lib/app.dart
+      # Step 2: RESTORE your real pubspec configuration along with your custom code files
+      - name: Restore Custom Code and Configurations
+        run: git checkout HEAD -- pubspec.yaml lib/main.dart lib/app.dart
 
-      # Step 3: Gather dependencies cleanly
+      # Step 3: Fetch all of your real package dependencies cleanly
       - name: Get dependencies
         run: flutter pub get
 
-      # Step 4: Run the clean compiler compilation
+      # Step 4: Run the production compilation step
       - name: Build APK
         run: flutter build apk --release
 
